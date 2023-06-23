@@ -102,7 +102,7 @@ class PciTextAnalysis extends Command
         $this->info(sprintf('Number of Unique Words: %d', $uniqueWords));
         $this->newLine();
 
-        // Count and output the number of lines in the file containing
+        // Count and output the number of lines in the file containing words
         $linesWithWords = $this->countLinesWithWords($fileContent);
         $this->info(sprintf('Number of lines with words: %d', $linesWithWords));
 
@@ -134,6 +134,7 @@ class PciTextAnalysis extends Command
      */
     private function getMostUsedWords(string $str, int $resultCount = self::TOP_WORD_RESULT_SIZE): array
     {
+        // Get word count, keyed by word.
         $words = str_word_count($str, 1);
         $wordCount = array_count_values($words);
         arsort($wordCount);
