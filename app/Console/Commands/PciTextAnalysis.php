@@ -51,6 +51,20 @@ class PciTextAnalysis extends Command
     const TOP_WORD_RESULT_SIZE = 5;
 
     /**
+     * The number of times to retry the curl request in case of error.
+     *
+     * @var int
+     */
+    const CURL_RETRY_ATTEMPTS = 5;
+
+    /**
+     * How long (in seconds) to wait before retrying curl execution.
+     *
+     * @var int
+     */
+    const CURL_RETRY_DELAY = 3;
+
+    /**
      * Execute the console command.
      */
     public function handle(): void
@@ -154,12 +168,7 @@ class PciTextAnalysis extends Command
 
         $content = curl_exec($curl);
 
-        if ($content === false) {
-            $error = curl_error($curl);
-            curl_close($curl);
-            $commandError = sprintf('Unable to fetch file from URL: %s', $error);
-            $this->logErrorAndExit($commandError);
-        }
+        $this->executeCurlWithRetry($curl);
 
         $curlInfo = curl_getinfo($curl);
         $statusCode = $curlInfo['http_code'];
@@ -220,7 +229,39 @@ class PciTextAnalysis extends Command
     }
 
     /**
-     * Outputs and logs an error to the current Logger implementation, and exits the command.
+     * Executes the curl request
+     *
+     * @param $curl - The curl handler
+     * @param $retryAttempts - Number of retry attempts before erroring out of the command
+     * @return bool|string|void
+     */
+    private function executeCurlWithRetry($curl, $retryAttempts = self::CURL_RETRY_ATTEMPTS)
+    {
+        $retryCount = 0;
+
+        while ($retryCount < $retryAttempts) {
+            $content = curl_exec($curl);
+
+            if ($content !== false) {
+                return $content;
+            }
+
+            $error = curl_error($curl);
+            $retryCount++;
+
+            // Add a bit of a delay before retrying.
+            sleep(self::CURL_RETRY_DELAY);
+
+            $this->warn(
+                sprintf('Failed to fetch file from URL (Attempt %d): %s', $retryCount, $error)
+            );
+        }
+
+        $this->logErrorAndExit('Maximum retry attempts reached. Failed to fetch the content.');
+    }
+
+    /**
+     * Outputs and logs an error to the current logger implementation, and exits the command.
      *
      * @param string $commandError - Error to output and log.
      * @return void
@@ -231,4 +272,6 @@ class PciTextAnalysis extends Command
         Log::error($commandError);
         exit(1);
     }
+
+
 }
