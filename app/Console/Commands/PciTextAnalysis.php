@@ -232,10 +232,10 @@ class PciTextAnalysis extends Command
      * Executes the curl request
      *
      * @param $curl - The curl handler
-     * @param $retryAttempts - Number of retry attempts before erroring out of the command
+     * @param int $retryAttempts - Number of retry attempts before erroring out of the command
      * @return bool|string|void
      */
-    private function executeCurlWithRetry($curl, $retryAttempts = self::CURL_RETRY_ATTEMPTS)
+    private function executeCurlWithRetry($curl, int $retryAttempts = self::CURL_RETRY_ATTEMPTS)
     {
         $retryCount = 0;
 
